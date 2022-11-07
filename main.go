@@ -4,6 +4,7 @@ import (
 	"fmt"
 	uuid "github.com/satori/go.uuid"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -13,19 +14,59 @@ func pass(err error) {
 	}
 }
 
+/*
+protocol:
+	cmd:
+		- 0x01 for init feed connect
+*/
+type protocol struct {
+	length int32
+	cmd    byte
+}
+
 type Node struct {
-	id          int
-	conn        net.Conn
-	addr        net.Addr
-	uid         string
-	connectTime time.Time
+	listener *net.Listener
+	conn     net.Conn
+	addr     net.Addr
+	uid      string
+	birthAt  time.Time
+	hive     *NodeHive
 }
 
-func (node *Node) Init() {
+func (node *Node) Init(port int) {
+	listener, err := net.Listen("tcp", ":"+string(rune(port)))
+	pass(err)
+
+	node.listener = &listener
+	node.uid = uuid.NewV4().String()
 }
 
-func NewNode() {
+func (node *Node) Read() {
 
+}
+
+func (node *Node) Write() {
+
+}
+
+func (node *Node) Feed(addr string, port int) {
+	builder := strings.Builder{}
+	builder.WriteString(addr)
+	builder.WriteRune(rune(port))
+
+	conn, err := net.Dial("tcp", builder.String())
+	pass(err)
+
+	fmt.Printf("Feed remote node %s", conn.RemoteAddr().String())
+}
+
+func (node *Node) Run() {
+
+}
+
+func NewNode() *Node {
+	node := &Node{}
+	return node
 }
 
 type NodeHive struct {
@@ -52,11 +93,9 @@ func main() {
 		pass(err)
 
 		client := Node{
-			id:          len(nodeHive) + 1,
-			conn:        conn,
-			uid:         uuid.NewV4().String(),
-			addr:        conn.RemoteAddr(),
-			connectTime: time.Time{},
+			conn: conn,
+			uid:  uuid.NewV4().String(),
+			addr: conn.RemoteAddr(),
 		}
 		nodeHive = append(nodeHive, client)
 
