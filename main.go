@@ -14,16 +14,6 @@ func pass(err error) {
 	}
 }
 
-/*
-protocol:
-	cmd:
-		- 0x01 for init feed connect
-*/
-type protocol struct {
-	length int32
-	cmd    byte
-}
-
 type Node struct {
 	listener *net.Listener
 	conn     net.Conn
